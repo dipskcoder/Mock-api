@@ -19,7 +19,9 @@ const App: React.FC = () => {
   // Fetch the list of items initially
   const loadItems = async () => {
     try {
+      setLoader(true);
       const data = await fetchItems();
+      setLoader(false);
       setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -36,7 +38,7 @@ const App: React.FC = () => {
       setLoader(true);
       const createdItem = await createItem(newItem);
       setLoader(false);
-      setItems([...items, createdItem]); // Add the new item to the list
+      setItems([createdItem,...items]); // Add the new item to the list
     } catch (error) {
       console.error("Error creating item:", error);
     }
