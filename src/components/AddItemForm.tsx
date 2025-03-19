@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface AddItemFormProps {
   onAddItem: (newItem: { title: string; body: string }) => void;
@@ -18,8 +18,17 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onAddItem, onUpdateItem, curr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !body) {
-      setError("Both title and description are required!");
+    
+    if (!title && !body) {
+      setError("Title and description are required!");
+      return;
+    }
+    if (!title) {
+      setError("Title is required!");
+      return;
+    }
+    if (!body) {
+      setError("Description is required!");
       return;
     }
 
@@ -34,10 +43,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onAddItem, onUpdateItem, curr
     setError(null);
   };
 
+
   return (
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">{currentItem.id ? "Edit Item" : "Add Item"}</h2>
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 mb-2">{error}</p>}
       <div className="mb-4">
         <input
           type="text"
@@ -59,7 +69,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onAddItem, onUpdateItem, curr
         type="submit"
         className="w-full py-2 bg-blue-500 text-white rounded-lg"
       >
-        {currentItem.id ? "Update Item" : "Add Item"}
+        {currentItem.id ? "Update" : "Add"}
       </button>
     </form>
   )

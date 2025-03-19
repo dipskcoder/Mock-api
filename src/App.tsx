@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import List from "./components/List";
 import AddItemForm from "./components/AddItemForm";
 import { fetchItems, createItem, updateItem, deleteItem } from "./utils/api";
+import Loader from "./components/Loader";
 
 const App: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loader, setLoader] = useState<any>(false);
+  const [loadingError, setLoadingError] = useState<any>(false);
   const [currentItem, setCurrentItem] = useState<{
     id?: number;
     title: string;
@@ -14,7 +16,6 @@ const App: React.FC = () => {
     title: "",
     body: "",
   });
-
 
   // Fetch the list of items initially
   const loadItems = async () => {
@@ -25,6 +26,8 @@ const App: React.FC = () => {
       setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
+      setLoadingError(true);
+      setLoader(false);
     }
   };
 
@@ -38,7 +41,7 @@ const App: React.FC = () => {
       setLoader(true);
       const createdItem = await createItem(newItem);
       setLoader(false);
-      setItems([createdItem,...items]); // Add the new item to the list
+      setItems([createdItem, ...items]); // Add the new item to the list
     } catch (error) {
       console.error("Error creating item:", error);
     }
@@ -51,6 +54,7 @@ const App: React.FC = () => {
     body: string;
   }) => {
     setCurrentItem(item);
+    window.scrollTo(0, 0)
   };
 
   // Handle updating an item
@@ -60,13 +64,17 @@ const App: React.FC = () => {
   }) => {
     if (currentItem.id) {
       try {
+        setLoader(true);
         const updated = await updateItem(currentItem.id, updatedItem);
+        setLoader(false);
         setItems(
           items.map((item) => (item.id === currentItem.id ? updated : item))
         );
         setCurrentItem({ title: "", body: "" }); // Clear form after update
       } catch (error) {
         console.error("Error updating item:", error);
+        setLoadingError(true);
+        setLoader(false);
       }
     }
   };
@@ -74,38 +82,36 @@ const App: React.FC = () => {
   // Handle deleting an item
   const handleDeleteItem = async (id: number) => {
     try {
+      setLoader(true);
       await deleteItem(id);
+      setLoader(false);
       setItems(items.filter((item) => item.id !== id)); // Remove from list
     } catch (error) {
       console.error("Error deleting item:", error);
+      setLoadingError(true);
+      setLoader(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-4xl font-bold text-center mb-6"> Mock API 
-
-      </h1>
+      <h1 className="text-4xl font-bold text-center mb-6"> Mock API</h1>
       <AddItemForm
         onAddItem={handleAddItem}
         currentItem={currentItem}
         onUpdateItem={handleUpdateItem}
       />
-      <List
+      {loadingError && (
+        <h2 className="text-red-500 text-2xl font-bold mb-4 text-center my-8">
+          An error occurred. Please try again later.
+        </h2>
+      )}
+      {items.length > 0 && <List
         items={items}
         onEditItem={handleEditItem}
         onDeleteItem={handleDeleteItem}
-      />
-      {loader && <div className="flex justify-center items-center h-screen fixed top-0 left-0 right-0 bottom-0 w-full z-50 overflow-hidden bg-gray-700 opacity-75">
-        <div
-          className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-          role="status"
-        >
-          <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-            Loading...
-          </span>
-        </div>
-      </div>}
+      />}
+      {loader && <Loader />}
     </div>
   );
 };
